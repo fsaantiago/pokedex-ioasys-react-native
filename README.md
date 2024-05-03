@@ -63,4 +63,7 @@ No entanto, como precisei utilizar uma `IDE online`, a execução dos mesmos ain
 
 
 🧑‍💻 Desenvolvedor
-[FOTO SUA + NOME + LINK DO LINKEDIN]
+
+Fenando Santiago
+[Visite meu linkedin](https://www.linkedin.com/in/fernando-santiago/)
+contato: fernando.santiago770@gmail.com
