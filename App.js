@@ -1,16 +1,15 @@
-import { View, ScrollView, TextInput, Image, TouchableOpacity, Button } from 'react-native';
 import React from 'react';
+import { Text, View, Button, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Component } from 'react';
 import styles from './styles/pokeStyles'
 import CardPage from './components/CardPage';
-import { PokeType } from './components/Poketype'; // Importando a função PokeType
 import FilterPokemons from './components/filterPokemons'
 import SearchBar from './components/SearchBar'
 import ErrorPage from './components/ErrorPage' 
 import LoadingPage from './components/LoadingPage' 
 import CardDetail from './components/CardDetail';
 
-
+//inicio da tela
 class App extends Component {
   constructor() {
     //starta o estado inicial do componente
@@ -38,54 +37,63 @@ class App extends Component {
     this.setState({ selectedItem: null });
   };
 
-  // Função para obter uma nova página
+  //funcao pra pegar uma nova pagina
   nextPage() {
     return this.state.page + this.state.loadPages;
   }
+
+  //funcao para fazer o fetch da API
+  fechAPI() {
+      const { page, loadPages } = this.state;
+      const url = `https://pokeapi.co/api/v2/pokemon?offset=${page}&limit=${loadPages}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data) {
+            const updatedPokeInfo = [];
+            const requests = data.results.map(pokemon => {
+              return fetch(pokemon.url)
+                .then(response => response.json())
+                .then(pokemonData => {
+                  if (pokemonData) {
+                    updatedPokeInfo.push(pokemonData);
+                  }
+                });
+            });
+
+            Promise.all(requests).then(() => {
+              this.setState({ pokeInfo: updatedPokeInfo });
+            });
+          }
+        })
+        .catch(error => console.error('Error fetching Pokemon list:', error));
+}
 
   //função que vai lidar com a integração da api dos pokemons
   componentDidMount() {
     // carrega tela de oaging por 3 segundos
     setTimeout(() => {
       this.setState({ isLoading: false });
-      this.pokemonPagination();
+      //this.pokemonPagination();
+      this.fechAPI();
       }, 3000);
   }
 
-  pokemonPagination() {
-    let url = "https://pokeapi.co/api/v2/pokemon?offset=" + this.state.page + '&limit=' + this.state.loadPages;
-    fetch(url).then(response => response.json()).then(data => {
-        if (data) {
-          this.setState({ pokeData: data.results }, () => {
-            this.state.pokeData.map(pokemon => {
-              fetch(pokemon.url).then(response => response.json()).then(data => {
-                  if (data) {
-                    var aux = this.state.pokeInfo;
-                    aux.push(data);
-                    this.setState({ pokeInfo: aux });
-                  }
-                }).catch(console.log);
-            });
-          });
-        }
-      }).catch(console.log);
-  }
-
-  // Função para carregar mais pokemons (load da tela)
+  //funcao pra pegar mais pokemons (load da tela)
   loadMorePokemons(event) {
     const newPage = this.nextPage();
-    this.setState({ page: newPage }, () => {
+    
+    this.setState({page: newPage}, () => {
       console.log("Page: " + this.state.page)
-      this.pokemonPagination();
-    });
+      this.fechAPI();
+    });    
   }
 
-  updateSearchTerm = (searchTerm) => {
-    this.setState({ searchTerm });
-  };
+  updateSearchTerm = (searchTerm) => {this.setState({ searchTerm });};
 
   render() {
-    const { pokeInfo, halfPageHeight, searchTerm, isLoading, selectedItem } = this.state;
+    const { pokeInfo, halfPageHeight, searchTerm, isLoading, selectedItem, favorites } = this.state;
     const filteredPokemonList = FilterPokemons(pokeInfo, searchTerm);
 
     if (isLoading) {return <LoadingPage />;}
@@ -94,8 +102,9 @@ class App extends Component {
     if (selectedItem) {
       return (
         <View style={styles.container}>
+         <View style={styles.background}></View>
+          <Button title="<-" onPress={this.backInitialAfterSelect} style={styles.backButton} />
           <CardDetail pokemon={selectedItem} />
-          <Button title="Back" onPress={this.backInitialAfterSelect} />
         </View>
       );
     }
@@ -112,11 +121,16 @@ class App extends Component {
 
     //chama file que cria views dos cards dos pokemons
     const pokemonListFromApi = filteredPokemonList.map((pokemon, index) => { 
-      return (<CardPage pokemon={pokemon} onPress={this.clickOneItem} /> );
+      return (<CardPage pokemon={pokemon} onPress={this.clickOneItem}/> );
     });
 
     return (
       <View style={styles.container}>
+       <View style={styles.logoContainer}>
+          <Image styles={styles.logoHeader}  source={require('./assets/images/logo-header/logo-frame.png')} />
+          <Text style={styles.textHeader}>ioasys pokedex</Text>
+      </View>
+
         {searchBar}
 
         <ScrollView style={styles.scrollView}
@@ -126,10 +140,10 @@ class App extends Component {
             
             <View style={{ minHeight: halfPageHeight }}></View>
             <View style={styles.grid}>{pokemonListFromApi}</View>
-
+        
         </ScrollView>
         <View style={styles.bottomContent}>
-          <TouchableOpacity onPress={this.loadMorePokemons}>
+            <TouchableOpacity onPress={this.loadMorePokemons}>
             <Image
               source={require('./assets/icons/godown-icon.png')} // Caminho para o ícone personalizado
               style={{ width: 24, height: 24, alignItems: 'center' }} // Tamanho do ícone
