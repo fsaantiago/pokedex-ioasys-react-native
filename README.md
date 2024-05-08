@@ -1,6 +1,6 @@
 # Desafio PokeDex - ioasys Turma 5
 
-<img src="./images/demonstracao-app.gif">
+<img src="./images/demonstracao-pokedex.gif">
 
 ## Projeto
 Este projeto foi implementado como desafio da 1ª etapa do ioasys Camp (turma 5). Esse README guiará sobre as informações gerais do que foi desenvolvido por mim.
